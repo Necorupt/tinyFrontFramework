@@ -17,6 +17,8 @@ class Lexer {
                 this.readNumber();
             } else if (this.ch === '\'' || this.ch === '"') {
                 this.readString();
+            } else if (this.isIdent(this.ch)) {
+                this.readIndificator();
             } else {
                 throw 'Unexpected character';
             }
@@ -31,6 +33,10 @@ class Lexer {
     }
 
     isNumber(ch) { return ch >= '0' && ch <= '9' }
+
+    isIdent(ch) {
+        return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch === '_' || ch === '$';
+    }
 
     readNumber() {
         let number = '';
@@ -78,13 +84,35 @@ class Lexer {
 
         throw 'Unmatchet quote'
     }
+
+    readIndificator() {
+        let string = '';
+
+        while (this.index < this.text.length) {
+            let ch = this.text.charAt(this.index);
+
+            if (this.isIdent(ch) || this.isNumber()) {
+                string += ch;
+            } else {
+                break;
+            }
+
+            this.index++;
+        }
+
+        this.tokens.push({
+            text: string
+        });
+    }
 };
 
 class AST {
     lexer;
     tokens = new Array();
-    constans = {
-        'null' : {type: Ast.Literal, value: null}
+    constants = {
+        'null': { type: AST.Literal, value: 'null' },
+        'true': { type: AST.Literal, value: true },
+        'false': { type: AST.Literal, value: false }
     }
 
     constructor(lexer) {
@@ -99,7 +127,15 @@ class AST {
     program() {
         return {
             type: AST.Program,
-            body: this.constant()
+            body: this.primary()
+        }
+    }
+
+    primary() {
+        if (this.constants.hasOwnProperty(this.tokens[0].text)) {
+            return this.constants[this.tokens[0].text];
+        } else {
+            return this.constant();
         }
     }
 
@@ -128,11 +164,12 @@ class astCompiler {
 
         this.recurse(ast);
 
+        console.error(this.state.body.join(''));
         let fn = new Function(this.state.body.join(''));
         return fn;
     }
 
-    recurse(ast) { 
+    recurse(ast) {
         switch (ast.type) {
             case AST.Program:
                 this.state.body.push('return ', this.recurse(ast.body), ';');
@@ -142,7 +179,7 @@ class astCompiler {
         }
     }
 
-    escape(ast) {;
+    escape(ast) {
         if (typeof (ast.value) === 'string') {
             return "'" + ast.value + "'";
         } else {

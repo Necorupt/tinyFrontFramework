@@ -27,9 +27,15 @@ describe("Parse", function () {
         expect(fn()).toBe("hello");
     });
 
+    // it('Can parse null', function () {
+    //     var fn = parse('null');
+    //     console.error("FN()", fn());
+    //     expect(fn()).toBe(null);
+    // });
+
     it('Can parse true', function () {
         var fn = parse('true');
-        expect(fn()).toBe(false);
+        expect(fn()).toBe(true);
     });
 
     it('Can parse false', function () {

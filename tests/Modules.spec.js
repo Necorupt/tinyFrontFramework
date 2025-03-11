@@ -13,5 +13,14 @@ describe("Modules", function () {
         CreateTff();
 
         expect(window.tff).toBe(tff);
-    })
+    });
+
+    it("allow register module", function(){
+        CreateTff();
+        
+        let module = window.tff.module('test',[]);
+        
+        expect(module).toBeDefined();
+        expect(module.name).toEqual('test');
+    });
 })

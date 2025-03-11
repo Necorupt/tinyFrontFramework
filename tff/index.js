@@ -1,7 +1,7 @@
 import Tff from "./Tff";
-import createTff from "./CreateTff";
+import CreateTff from "./CreateTff";
 import Scope from "./Scope";
 
 export {Tff}
-export {createTff}
+export {CreateTff}
 export {Scope}
