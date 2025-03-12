@@ -42,8 +42,6 @@ describe("Scope", function () {
     it('can catch exceptions', function () {
         scope.value = 1;
 
-        let oldValGiven = 0;
-
         scope.$watch(
             (scope) => { return scope.value },
             (newValue, oldValue, scope) => { throw Error; }

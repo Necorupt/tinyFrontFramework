@@ -1,21 +1,21 @@
-export default function CreateInjector(modulesToLoad){
-    let cache = {};
-    
-    let $provide = {
-        constant: function(key,value){
-            cache[key] = value;
-        }
-    };
+export default function CreateInjector(modulesToLoad) {
+  let cache = {};
 
-    for(let moduleName of modulesToLoad){
-        let module = window.tff.module(moduleName);
+  let $provide = {
+    constant: function (key, value) {
+      cache[key] = value;
+    },
+  };
 
-        cache[moduleName] = true;
-    }
-    
-    return {
-        has: function(key){
-            return cache.hasOwnProperty(key);
-        }
-    };
+  for (let moduleName of modulesToLoad) {
+    let module = window.tff.module(moduleName);
+
+    cache[moduleName] = true;
+  }
+
+  return {
+    has: function (key) {
+      return cache.hasOwnProperty(key);
+    },
+  };
 }

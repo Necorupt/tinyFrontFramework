@@ -18,6 +18,6 @@ export default mergeConfig(viteConfig, defineConfig({
         }
     ],
     test: {
-        environment: 'happy-dom'
+        environment: 'happy-dom',
     }
 }))

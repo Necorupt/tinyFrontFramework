@@ -55,7 +55,7 @@ export default class Scope {
         for (let i = 0; i < listners.length; i++) {
             console.error(listners[i]);
             if (listners[i] === null) {
-                listners.splie(i, 1);
+                listners.splice(i, 1);
             } else {
                 try {
                     listners[i].apply(null, args);
