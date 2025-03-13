@@ -9,19 +9,22 @@ export default class Tff {
     return this.#modules[name];
   }
 
-  ensure(obj, name, factory) {
-    return obj[name] || (obj[name] = factory());
-  }
-
   createModule(name, requires) {
     if (name === "hasOwnProperty") {
       throw "Invalid module name";
     }
+    let invokeQueue = [];
 
     let moduleInstance = {
       name: name,
       requires: requires,
-      constant: function (key, value) {},
+      constant: function (key, value) {
+        invokeQueue.push(["constant", [key, value]]);
+      },
+      provider: function (key, provider) {
+        invokeQueue.push(["provider", [key, provider]]);
+      },
+      _invokeQueue: invokeQueue,
     };
 
     this.#modules[name] = moduleInstance;

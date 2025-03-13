@@ -286,7 +286,7 @@ class astCompiler {
 
     this.recurse(ast);
 
-    console.error(this.state.body.join(""));
+    // console.error(this.state.body.join(""));
     let fn = new Function("s", this.state.body.join(""));
     return fn;
   }
