@@ -88,12 +88,72 @@ describe("Injector", function () {
 
     expect(injector.has("a")).toBe(true);
     expect(injector.get("a")).toBe(4);
+  });
 
-    let ttfInjector = CreateInjector(["tff"]);
-    let compile = ttfInjector.get("$compile");
+  it("overrides dependencies with locals when invoke()", function () {
+    let module = window.tff.module("module", []);
+    module.constant("a", 1);
+    module.provider("b", 2);
 
-    console.error(ttfInjector.invoke(function ($compile) {
-        console.error(this);
-    }));
+    let injector = CreateInjector(["module"]);
+
+    let fn = function (arg1, arg2) {
+      return arg1 + arg2;
+    };
+
+    fn.$inject = ["a", "b"];
+
+    expect(injector.invoke(fn, undefined, { b: 3 })).toBe(4);
+  });
+
+  it("annotate return $inject annotation of a funtion when it has one", function () {
+    let injector = CreateInjector([]);
+
+    let fn = function () {};
+    fn.$inject = ["a", "b"];
+
+    expect(injector.annotate(fn)).toEqual(["a", "b"]);
+  });
+
+  it("annotate return $inject annotation of a funtion", function () {
+    let injector = CreateInjector([]);
+
+    let fn = ["a", "b", function () {}];
+
+    expect(injector.annotate(fn)).toEqual(["a", "b"]);
+  });
+  it("stripts comments from argument list when parsing", function () {
+    let injector = CreateInjector([]);
+
+    let fn = function (a, /*testing*/ b) {};
+
+    expect(injector.annotate(fn)).toEqual(["a", "b"]);
+  });
+  it("invokes non anotated function with dependency injection", function () {
+    let module = window.tff.module("module", []);
+    module.constant("a", 1);
+    module.constant("b", 2);
+
+    let injector = CreateInjector(["module"]);
+
+    let fn = function (a, b) {
+      return a + b;
+    };
+
+    expect(injector.invoke(fn)).toBe(3);
+  });
+  it("instantiates an array-annotated constructor function", function () {
+    let module = window.tff.module("module", []);
+    module.constant("a", 1);
+    module.constant("b", 2);
+
+    let injector = CreateInjector(["module"]);
+
+    function Type(a, b) {
+      return (this.result = a + b);
+    }
+
+    let instance = injector.instantiate(["a", "b", Type]);
+    expect(instance.result).toBe(3);
   });
 });

@@ -1,15 +1,21 @@
 export default function CreateInjector(modulesToLoad) {
-  let cache = {};
   let loadedModules = {};
   let FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
   let FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
+  let STRIP_COMMENTS = /\/\*.*\*\//;
+
+  var instanceCache = {};
+  var providerCache = {};
 
   let $provide = {
     constant: function (key, value) {
-      cache[key] = value;
+      if (key === "hasOwnProperty") {
+        throw "hasOwnProperty is not valid constant key";
+      }
+      instanceCache[key] = value;
     },
     provider: function (key, provider) {
-      cache[key] = invoke(provider.$get, provider);
+      providerCache[key + "_provider"] = provider;
     },
   };
 
@@ -20,20 +26,42 @@ export default function CreateInjector(modulesToLoad) {
       return fn.$inject;
     } else if (!fn.length) {
       return [];
+    } else {
+      let source = fn.toString().replace(STRIP_COMMENTS, "");
+      let argDeclaration = source.match(FN_ARGS);
+
+      let args = argDeclaration[1].split(",").map((el) => {
+        return el.match(FN_ARG)[2];
+      });
+
+      return args;
     }
-
-    let source = fn.toString();
-    let argDeclaration = source.match(FN_ARGS);
-
-    let args =  argDeclaration[1].split(',').map((el) => {
-      return el;
-    });
-
-    return args;
   }
 
-  function invoke(fn, self) {
-    let args = annotate(fn).map((token) => cache[token]);
+  function getService(name) {
+    if (instanceCache.hasOwnProperty(name)) {
+      return instanceCache[name];
+    } else if (providerCache.hasOwnProperty(name + "_provider")) {
+      let provider = providerCache[name + "_provider"];
+
+      return invoke(provider.$get, provider);
+    }
+  }
+
+  function invoke(fn, self, locals) {
+    let args = annotate(fn).map((token) => {
+      if (typeof token === "string") {
+        return locals && locals.hasOwnProperty(token)
+          ? locals[token]
+          : getService(token);
+      } else {
+        throw "Incorect injection token! Expected string, got " + token;
+      }
+    });
+
+    if(typeof fn === 'object'){
+      fn = fn[Object.keys(fn)[Object.keys(fn).length - 1]];
+    }
 
     return fn.apply(self, args);
   }
@@ -54,17 +82,26 @@ export default function CreateInjector(modulesToLoad) {
         $provide[method].apply($provide, args);
       }
 
-      cache[moduleName] = true;
+      instanceCache[moduleName] = true;
     }
   });
 
+  function instantiate(Type){
+    let instance = {};
+    invoke(Type, instance);
+    return instance;
+  }
+
   return {
     has: function (key) {
-      return cache.hasOwnProperty(key);
+      return (
+        instanceCache.hasOwnProperty(key) ||
+        providerCache.hasOwnProperty(key + "_provider")
+      );
     },
-    get: function (key) {
-      return cache[key];
-    },
+    get: getService,
     invoke: invoke,
+    annotate: annotate,
+    instantiate: instantiate,
   };
 }

@@ -15,15 +15,20 @@ export default class Tff {
     }
     let invokeQueue = [];
 
+    var invokeLater = function (method, arrayMethod) {
+      return function () {
+        invokeQueue[arrayMethod || 'push']([method, arguments]);
+
+        return moduleInstance;
+      };
+    };
+
     let moduleInstance = {
       name: name,
       requires: requires,
-      constant: function (key, value) {
-        invokeQueue.push(["constant", [key, value]]);
-      },
-      provider: function (key, provider) {
-        invokeQueue.push(["provider", [key, provider]]);
-      },
+      constant: invokeLater("constant", 'unshift'),
+      provider: invokeLater("provider"),
+      directive: invokeLater("$compile"),
       _invokeQueue: invokeQueue,
     };
 

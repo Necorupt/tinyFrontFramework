@@ -1,17 +1,16 @@
 import Tff from "./Tff";
-import CompileProvider from "./providers/compile"
+import CompileProvider from "./providers/CompileProvider";
 
 export default function CreateTff() {
   if (window.tff) {
     return window.tff;
   }
 
-  window.tff = new Tff();
-  let tff = window.tff;
-
+  let tff = new Tff();
   let module = tff.module("tff", []);
 
-  module.provider('$compile', CompileProvider)
+  module.provider("$compile", CompileProvider);
 
+  window.tff = tff;
   return window.tff;
 }
